@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen" class="container">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Username" class="input-field">
+        <input type="password" id="password" placeholder="Password" class="input-field">
+        <button onclick="login()">Login</button>
+        <p>Don't have an account? <span class="link" onclick="showRegisterScreen()">Register</span></p>
+    </div>
+
+    <div id="register-screen" class="container" style="display: none;">
+        <h1>Register</h1>
+        <input type="text" id="reg-username" placeholder="Username" class="input-field">
+        <input type="password" id="reg-password" placeholder="Password" class="input-field">
+        <button onclick="register()">Register</button>
+        <p>Already have an account? <span class="link" onclick="showLoginScreen()">Login</span></p>
+    </div>
+
+    <div id="dashboard" class="container" style="display: none;">
+        <h1>Dashboard</h1>
+        <p>Welcome, <span id="user-name"></span>!</p>
+        <p>Available Balance: $<span id="balance-display">0.00</span></p>
+        <p>Total Donations: $<span id="donations-display">0.00</span></p>
+        <button onclick="showDonationModal()">Make a Donation</button>
+        <button onclick="showWithdrawModal()">Withdraw Funds</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div id="donation-modal" class="container" style="display: none;">
+        <h1>Make a Donation</h1>
+        <input type="number" id="donation-amount" placeholder="Enter donation amount" class="input-field">
+        <button onclick="makeDonation()">Submit Donation</button>
+        <button onclick="closeDonationModal()">Cancel</button>
+    </div>
+
+    <div id="withdraw-modal" class="container" style="display: none;">
+        <h1>Withdraw Funds</h1>
+        <input type="number" id="withdraw-amount" placeholder="Enter withdrawal amount" class="input-field">
+        <button onclick="processWithdrawal()">Submit Withdrawal</button>
+        <button onclick="closeWithdrawModal()">Cancel</button>
+    </div>
+
+    <script>
+        let users = {};
+        let currentUser = null;
+
+        function showRegisterScreen() {
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("register-screen").style.display = "block";
+        }
+
+        function showLoginScreen() {
+            document.getElementById("register-screen").style.display = "none";
+            document.getElementById("login-screen").style.display = "block";
+        }
+
+        function register() {
+            const username = document.getElementById("reg-username").value;
+            const password = document.getElementById("reg-password").value;
+
+            if (!username || !password) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            if (users[username]) {
+                alert("Username already exists.");
+                return;
+            }
+
+            users[username] = { password, balance: 0.0, donations: 0.0 };
+            alert("Registration successful! Please log in.");
+            showLoginScreen();
+        }
+
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            if (users[username] && users[username].password === password) {
+                currentUser = username;
+                document.getElementById("user-name").innerText = username;
+                updateDashboard();
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("dashboard").style.display = "block";
+            } else {
+                alert("Invalid username or password.");
+            }
+        }
+
+        function updateDashboard() {
+            const user = users[currentUser];
+            document.getElementById("balance-display").innerText = user.balance.toFixed(2);
+            document.getElementById("donations-display").innerText = user.donations.toFixed(2);
+        }
+
+        function showDonationModal() {
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("donation-modal").style.display = "block";
+        }
+
+        function closeDonationModal() {
+            document.getElementById("donation-modal").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+        }
+
+        function makeDonation() {
+            if (!currentUser) {
+                alert("Please log in to make a donation.");
+                return;
+            }
+
+            const amount = parseFloat(document.getElementById("donation-amount").value);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid donation amount.");
+                return;
+            }
+
+            users[currentUser].balance += amount;
+            users[currentUser].donations += amount;
+            alert(`Donation of $${amount.toFixed(2)} added successfully.`);
+            document.getElementById("donation-amount").value = "";
+            closeDonationModal();
+            updateDashboard();
+        }
+
+        function showWithdrawModal() {
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("withdraw-modal").style.display = "block";
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById("withdraw-modal").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+        }
+
+        function processWithdrawal() {
+            if (!currentUser) {
+                alert("Please log in to withdraw funds.");
+                return;
+            }
+
+            const amount = parseFloat(document.getElementById("withdraw-amount").value);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid withdrawal amount.");
+                return;
+            }
+
+            if (amount > users[currentUser].balance) {
+                alert("Insufficient balance.");
+                return;
+            }
+
+            users[currentUser].balance -= amount;
+            alert(`Withdrawal of $${amount.toFixed(2)} successful.`);
+            document.getElementById("withdraw-amount").value = "";
+            closeWithdrawModal();
+            updateDashboard();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById("dashboard").style.display = "none";
+            document.getElementById("login-screen").style.display = "block";
+        }
+    </script>
+</body>
+</html>
